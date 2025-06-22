@@ -31,14 +31,17 @@ export const useAuthSession = () => {
     try {
       const response: any = await apiRequest({
         method: 'post',
-        url: '/auth/refresh',
+        url: '/auth/refresh-token',
         data: { refreshToken },
       });
       if (response?.jwtToken) {
-        const { userName, jwtToken, refreshToken: newRefreshToken, expireTime } = response;
+        const { userName, email, jwtToken, refreshToken: newRefreshToken, expireTime } = response;
         dispatch(
           setLogin({
-            user: userName || null,
+            user: {
+              name: userName,
+              email: email
+            },
             token: jwtToken,
             refreshToken: newRefreshToken,
             expireIn: (expireTime || 15) * 60 * 1000, // convert min to ms

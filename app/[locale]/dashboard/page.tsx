@@ -34,8 +34,8 @@ const DashboardPage: React.FC = () => {
           token: token,
         });
 
-        if (!res.error) {
-          setDashboardData(res);
+        if (!res.error && res.data) {
+          setDashboardData(res.data);
         } else {
           showToast({ 
             title: 'Failed to load dashboard data', 

@@ -2,11 +2,11 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LoginForm } from '@/components/forms/login-form';
+import { NewPasswordForm } from '@/components/forms/new-password-form';
 import { useAppSelector } from '@/hooks/useRedux';
 import { useTranslations } from 'next-intl';
 
-const LoginPage: React.FC = () => {
+const NewPasswordPage: React.FC = () => {
   const { token } = useAppSelector((state) => state.auth);
   const router = useRouter();
   const t = useTranslations();
@@ -37,23 +37,16 @@ const LoginPage: React.FC = () => {
           <h1 className="text-2xl font-semibold text-black-ash">{t('common.appName')}</h1>
         </div>
 
-        {/* Login Form */}
+        {/* New Password Form */}
         <div>
           <h2 className="text-xl font-semibold text-center mb-7 text-dark-gray">
-            {t('auth.login.title')}
+            {t('auth.newPassword.title')}
           </h2>
-          <LoginForm />
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-8 pt-6 border-t border-light-gray">
-          <p className="text-medium-gray text-sm">
-            © {new Date().getFullYear()} {t('common.appName')}. {t('common.allRightsReserved')}.
-          </p>
+          <NewPasswordForm />
         </div>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default NewPasswordPage; 

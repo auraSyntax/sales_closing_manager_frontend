@@ -20,7 +20,7 @@ const CompaniesPage: React.FC = () => {
   const token = useAppSelector(state => state.auth.token);
   const [companies, setCompanies] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | undefined>();
+  const [selectedCompany, setSelectedCompany] = useState<any | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
@@ -65,12 +65,12 @@ const CompaniesPage: React.FC = () => {
   }, [fetchCompanies]);
 
   const handleAddCompany = () => {
-    setSelectedCompanyId(undefined);
+    setSelectedCompany(undefined);
     setIsModalOpen(true);
   };
 
-  const handleEditCompany = (companyId: string) => {
-    setSelectedCompanyId(companyId);
+  const handleEditCompany = (company: any) => {
+    setSelectedCompany(company);
     setIsModalOpen(true);
   };
 
@@ -140,7 +140,8 @@ const CompaniesPage: React.FC = () => {
   };
 
   const handleSaveCompany = () => {
-    fetchCompanies(); // Refresh after create/update
+    setIsModalOpen(false);
+    fetchCompanies(); // Refresh after create
   };
 
   return (
@@ -224,7 +225,7 @@ const CompaniesPage: React.FC = () => {
           <CompanyModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            companyId={selectedCompanyId}
+            companyId={selectedCompany?.id}
             onSave={handleSaveCompany}
           />
         </div>

@@ -1,7 +1,28 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ForgotPasswordForm } from '@/components/forms/forgot-password-form';
+import { useAppSelector } from '@/hooks/useRedux';
+import { useTranslations } from 'next-intl';
 
 const ForgotPasswordPage: React.FC = () => {
+  const { token } = useAppSelector((state) => state.auth);
+  const router = useRouter();
+  const t = useTranslations();
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (token) {
+      router.push('/dashboard');
+    }
+  }, [token, router]);
+
+  // Don't render if user is logged in
+  if (token) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="w-full max-w-md p-10 bg-white rounded-lg shadow-custom border border-light-gray text-center">
@@ -13,16 +34,16 @@ const ForgotPasswordPage: React.FC = () => {
               <path d="M12 16V16.01M12 8V12" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-black-ash">Sales Closing Manager</h1>
+          <h1 className="text-2xl font-semibold text-black-ash">{t('common.appName')}</h1>
         </div>
 
         {/* Forgot Password Form */}
         <div>
           <h2 className="text-xl font-semibold mb-4 text-dark-gray">
-            Reset your password
+            {t('auth.forgotPassword.title')}
           </h2>
           <p className="text-medium-gray mb-7 text-sm leading-relaxed">
-            Enter your email address and we'll send you a link to reset your password.
+            {t('auth.forgotPassword.subtitle')}
           </p>
           <ForgotPasswordForm />
         </div>

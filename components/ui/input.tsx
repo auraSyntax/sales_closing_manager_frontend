@@ -5,12 +5,13 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   label?: React.ReactNode;
   error?: string;
   icon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
   fullWidth?: boolean;
   type?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type = 'text', label, error, icon, fullWidth, ...props }, ref) => {
+  ({ className, type = 'text', label, error, icon, rightIcon, fullWidth, ...props }, ref) => {
     return (
       <div className={cn("w-full", fullWidth ? "w-full" : "w-auto")}>
         {label && (
@@ -20,8 +21,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative">
           {icon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
               {icon}
+            </div>
+          )}
+          {rightIcon && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+              {rightIcon}
             </div>
           )}
           <input
@@ -30,6 +36,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               'flex h-10 w-full px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 input-enhanced',
               error && 'border-red-500 focus:border-red-500',
               icon && 'pl-10',
+              rightIcon && 'pr-10',
               className
             )}
             ref={ref}

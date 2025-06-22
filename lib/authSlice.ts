@@ -3,10 +3,13 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 const tokenExpireIn = 3600; // Default expire time in seconds
 
-export type User = string | null; // user is just a string
+export interface User {
+    name: string;
+    email: string;
+}
 
 interface AuthState {
-    user: User;
+    user: User | null;
     token: string | null;
     refreshToken: string | null;
     expireIn: number;

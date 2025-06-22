@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ToggleSwitch } from '@/components/ui/toggle';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { Eye, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface Company {
   id: string;
@@ -20,7 +21,7 @@ interface Company {
 interface CompaniesTableProps {
   companies: Company[];
   loading: boolean;
-  onEdit: (company: Company) => void;
+  onEdit: (companyId: string) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: boolean) => void;
 }
@@ -34,6 +35,7 @@ export const CompaniesTable: React.FC<CompaniesTableProps> = ({
 }) => {
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
   const [companyToDelete, setCompanyToDelete] = React.useState<Company | null>(null);
+  const t = useTranslations();
 
   const handleDeleteClick = (company: Company) => {
     setCompanyToDelete(company);
@@ -57,7 +59,7 @@ export const CompaniesTable: React.FC<CompaniesTableProps> = ({
       return (
         <img
           src={company.logo}
-          alt="Logo"
+          alt={t('companies.logo')}
           className="w-10 h-10 rounded-full object-cover shadow-md transition-transform duration-200 hover:scale-110"
         />
       );
@@ -87,14 +89,14 @@ export const CompaniesTable: React.FC<CompaniesTableProps> = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableCell isHeader>No</TableCell>
-              <TableCell isHeader>Logo</TableCell>
-              <TableCell isHeader>Company Name</TableCell>
-              <TableCell isHeader>Company Email</TableCell>
-              <TableCell isHeader className="hidden md:table-cell">Contact Person</TableCell>
-              <TableCell isHeader className="hidden md:table-cell">Contact Phone</TableCell>
-              <TableCell isHeader>Status</TableCell>
-              <TableCell isHeader className="text-center">Actions</TableCell>
+              <TableCell isHeader>{t('common.rowNumber')}</TableCell>
+              <TableCell isHeader>{t('companies.logo')}</TableCell>
+              <TableCell isHeader>{t('companies.companyName')}</TableCell>
+              <TableCell isHeader>{t('companies.companyEmail')}</TableCell>
+              <TableCell isHeader className="hidden md:table-cell">{t('companies.contactPerson')}</TableCell>
+              <TableCell isHeader className="hidden md:table-cell">{t('companies.contactPhone')}</TableCell>
+              <TableCell isHeader>{t('common.status')}</TableCell>
+              <TableCell isHeader className="text-center">{t('common.actions')}</TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -113,7 +115,7 @@ export const CompaniesTable: React.FC<CompaniesTableProps> = ({
               ))
             ) : companies.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-gray-500">No data found.</TableCell>
+                <TableCell colSpan={8} className="text-center py-8 text-gray-500">{t('common.noDataFound')}</TableCell>
               </TableRow>
             ) : (
               companies.map((company, index) => (
@@ -135,11 +137,11 @@ export const CompaniesTable: React.FC<CompaniesTableProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onEdit(company)}
+                        onClick={() => onEdit(company.id)}
                         className="flex items-center gap-1"
                       >
                         <Eye className="w-4 h-4" />
-                        <span className="hidden sm:inline">View</span>
+                        <span className="hidden sm:inline">{t('common.view')}</span>
                       </Button>
                       <Button
                         variant="destructive"
@@ -148,7 +150,7 @@ export const CompaniesTable: React.FC<CompaniesTableProps> = ({
                         className="flex items-center gap-1"
                       >
                         <Trash2 className="w-4 h-4" />
-                        <span className="hidden sm:inline">Delete</span>
+                        <span className="hidden sm:inline">{t('common.delete')}</span>
                       </Button>
                     </div>
                   </TableCell>
@@ -164,10 +166,10 @@ export const CompaniesTable: React.FC<CompaniesTableProps> = ({
         isOpen={deleteModalOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
-        title="Delete Company"
-        message={`Are you sure you want to delete "${companyToDelete?.companyName}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('common.delete')}
+        message={`${t('companies.deleteConfirmation')} "${companyToDelete?.companyName}"? ${t('companies.deleteWarning')}`}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
       />
     </>

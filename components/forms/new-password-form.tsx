@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2, KeyRound } from 'lucide-react';
+import apiRequest from '@/lib/apiRequest';
+import { showToast } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 export const NewPasswordForm: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -14,30 +17,80 @@ export const NewPasswordForm: React.FC = () => {
     confirmPassword: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [isValidToken, setIsValidToken] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const t = useTranslations();
+
+  // Get reset token from URL
+  const resetToken = searchParams.get('token');
+
+  useEffect(() => {
+    // Check if user has a valid reset token
+    if (!resetToken) {
+      showToast({ 
+        title: t('auth.newPassword.invalidAccess'), 
+        description: t('auth.newPassword.invalidAccessDesc'), 
+        type: 'error' 
+      });
+      router.push('/forgot-password');
+      return;
+    }
+    setIsValidToken(true);
+  }, [resetToken, router, t]);
 
   const validatePasswords = () => {
     const newErrors: Record<string, string> = {};
     
     if (formData.newPassword.length < 8) {
-      newErrors.newPassword = 'Password must be at least 8 characters long';
+      newErrors.newPassword = t('auth.newPassword.passwordTooShort');
     }
     
     if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth.newPassword.passwordMismatch');
     }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validatePasswords()) {
-      // Simulate API call
-      setTimeout(() => {
+    if (!validatePasswords()) return;
+    
+    setLoading(true);
+    
+    try {
+      const res = await apiRequest({
+        method: 'post',
+        url: '/auth/reset-password',
+        data: {
+          resetToken,
+          newPassword: formData.newPassword
+        },
+      });
+
+      if (!res.error) {
+        showToast({ title: t('auth.newPassword.passwordUpdated') });
+        // Navigate to login
         router.push('/login');
-      }, 1000);
+      } else {
+        setErrors({ api: res.error });
+        showToast({ 
+          title: t('auth.newPassword.passwordUpdateFailed'), 
+          description: res.error, 
+          type: 'error' 
+        });
+      }
+    } catch (error) {
+      showToast({ 
+        title: t('auth.newPassword.passwordUpdateFailed'), 
+        description: 'An error occurred', 
+        type: 'error' 
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,7 +109,19 @@ export const NewPasswordForm: React.FC = () => {
   };
 
   const isFormValid = formData.newPassword.length >= 8 && 
-                     formData.newPassword === formData.confirmPassword;
+                     formData.newPassword === formData.confirmPassword &&
+                     !loading;
+
+  if (!isValidToken) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+          <span className="text-gray-600">{t('common.loading')}</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -64,8 +129,8 @@ export const NewPasswordForm: React.FC = () => {
         <Input
           type={showNewPassword ? 'text' : 'password'}
           name="newPassword"
-          placeholder="Enter new password"
-          label="New Password"
+          placeholder={t('auth.newPassword.newPasswordPlaceholder')}
+          label={t('auth.newPassword.newPassword')}
           value={formData.newPassword}
           onChange={handleInputChange}
           error={errors.newPassword}
@@ -79,7 +144,7 @@ export const NewPasswordForm: React.FC = () => {
           {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
         </button>
         <div className="mt-2 text-xs text-medium-gray">
-          Use 8+ characters with a mix of letters, numbers & symbols
+          {t('auth.newPassword.passwordHint')}
         </div>
       </div>
 
@@ -87,8 +152,8 @@ export const NewPasswordForm: React.FC = () => {
         <Input
           type={showConfirmPassword ? 'text' : 'password'}
           name="confirmPassword"
-          placeholder="Confirm new password"
-          label="Confirm Password"
+          placeholder={t('auth.newPassword.confirmPasswordPlaceholder')}
+          label={t('auth.newPassword.confirmPassword')}
           value={formData.confirmPassword}
           onChange={handleInputChange}
           error={errors.confirmPassword}
@@ -103,17 +168,28 @@ export const NewPasswordForm: React.FC = () => {
         </button>
         {formData.confirmPassword && formData.newPassword === formData.confirmPassword && (
           <div className="mt-2 text-xs text-green-600">
-            Passwords match
+            {t('auth.newPassword.passwordsMatch')}
           </div>
         )}
       </div>
+
+      {errors.api && (
+        <div className="text-red-600 text-sm mt-2">{errors.api}</div>
+      )}
 
       <Button 
         type="submit" 
         className="w-full" 
         disabled={!isFormValid}
       >
-        Update Password
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            {t('auth.newPassword.updating')}
+          </>
+        ) : (
+          t('auth.newPassword.setPassword')
+        )}
       </Button>
     </form>
   );

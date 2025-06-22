@@ -1,3 +1,7 @@
+const createNextIntlPlugin = require('next-intl/plugin')(
+  './i18n.ts'
+);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -8,10 +12,10 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `http://localhost:3001/:path*`, // Proxy to Backend using env var
+        destination: `${'http://localhost:3001'}/:path*`, // Proxy to Backend using env var
       },
     ];
   },
 };
 
-module.exports = nextConfig;
+module.exports = createNextIntlPlugin(nextConfig);

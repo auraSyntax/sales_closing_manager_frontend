@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, User } from 'lucide-react';
 import apiRequest from '@/lib/apiRequest';
-import { useAppDispatch } from '@/hooks/useRedux';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import { setLogin } from '@/lib/authSlice';
 import { showToast, isValidEmail } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 export const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,16 +22,25 @@ export const LoginForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { token } = useAppSelector((state) => state.auth);
+  const t = useTranslations();
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (token) {
+      router.push('/dashboard');
+    }
+  }, [token, router]);
 
   const validate = () => {
     const errs: { email?: string; password?: string } = {};
     if (!formData.email) {
-      errs.email = 'Email is required';
+      errs.email = t('auth.login.emailRequired');
     } else if (!isValidEmail(formData.email)) {
-      errs.email = 'Invalid email address';
+      errs.email = t('auth.login.invalidEmail');
     }
     if (!formData.password) {
-      errs.password = 'Password is required';
+      errs.password = t('auth.login.passwordRequired');
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -49,15 +59,18 @@ export const LoginForm: React.FC = () => {
     setLoading(false);
     if (!res.error) {
       dispatch(setLogin({
-        user: res.userName,
+        user: {
+          name: res.userName,
+          email: res.email
+        },
         token: res.jwtToken,
         refreshToken: res.refreshToken,
         expireIn: (res.expirationTime || 15) * 60 * 1000,
       }));
-      showToast({ title: 'Login successful!' });
+      showToast({ title: t('auth.login.loginSuccessful') });
     } else {
       setErrors({ api: res.error });
-      showToast({ title: 'Login failed', description: res.error, type: 'error' });
+      showToast({ title: t('auth.login.loginFailed'), description: res.error, type: 'error' });
     }
   };
 
@@ -71,40 +84,47 @@ export const LoginForm: React.FC = () => {
     }
   };
 
+  // Don't render form if user is already logged in
+  if (token) {
+    return null;
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="relative">
         <Input
           type="email"
           name="email"
-          placeholder="Enter your email"
-          label="Email"
+          placeholder={t('auth.login.emailPlaceholder')}
+          label={t('auth.login.email')}
           value={formData.email}
           onChange={handleInputChange}
           required
           error={errors.email}
+          rightIcon={<User className="w-5 h-5 text-medium-gray" />}
         />
-        <User className="absolute right-3 top-12 w-5 h-5 text-medium-gray" />
       </div>
 
       <div className="relative">
         <Input
           type={showPassword ? 'text' : 'password'}
           name="password"
-          placeholder="Enter your password"
-          label="Password"
+          placeholder={t('auth.login.passwordPlaceholder')}
+          label={t('auth.login.password')}
           value={formData.password}
           onChange={handleInputChange}
           required
           error={errors.password}
+          rightIcon={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-medium-gray hover:text-gray-700"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          }
         />
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3 top-12 text-medium-gray hover:text-gray-700"
-        >
-          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-        </button>
       </div>
 
       {errors.api && (
@@ -119,19 +139,19 @@ export const LoginForm: React.FC = () => {
             onChange={(e) => setRememberMe(e.target.checked)}
             className="rounded border-gray-300 text-black-ash focus:ring-black-ash"
           />
-          <span className="text-medium-gray">Remember me</span>
+          <span className="text-medium-gray">{t('auth.login.rememberMe')}</span>
         </label>
         
         <a
           href="/forgot-password"
           className="text-dark-gray font-medium hover:text-black-ash hover:underline transition-colors"
         >
-          Forgot password?
+          {t('auth.login.forgotPassword')}
         </a>
       </div>
 
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Logging in...' : 'Login'}
+        {loading ? t('auth.login.loggingIn') : t('auth.login.loginButton')}
       </Button>
     </form>
   );
