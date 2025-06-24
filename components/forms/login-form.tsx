@@ -58,16 +58,22 @@ export const LoginForm: React.FC = () => {
     });
     setLoading(false);
     if (!res.error) {
+      // Set rememberMe cookie for Redux Persist storage selection
+      document.cookie = `rememberMe=${rememberMe}; path=/`;
       dispatch(setLogin({
         user: {
           name: res.userName,
-          email: res.email
+          email: res.email,
+          userType: res.userType,
+          profile: res.profile
         },
         token: res.jwtToken,
         refreshToken: res.refreshToken,
         expireIn: (res.expirationTime || 15) * 60 * 1000,
       }));
       showToast({ title: t('auth.login.loginSuccessful') });
+      // Force reload to re-initialize Redux Persist with correct storage
+      window.location.reload();
     } else {
       setErrors({ api: res.error });
       showToast({ title: t('auth.login.loginFailed'), description: res.error, type: 'error' });

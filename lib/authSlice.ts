@@ -6,6 +6,8 @@ const tokenExpireIn = 3600; // Default expire time in seconds
 export interface User {
     name: string;
     email: string;
+    userType?: string;
+    profile?: string;
 }
 
 interface AuthState {

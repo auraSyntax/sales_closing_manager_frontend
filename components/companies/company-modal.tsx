@@ -43,6 +43,8 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('basicInfo');
   const [logoPreview, setLogoPreview] = useState<string>('');
+  const [logoUrlWithDomain, setLogoUrlWithDomain] = useState<string>('');
+  const [logoToDelete, setLogoToDelete] = useState<string>('');
   const [formData, setFormData] = useState<Partial<Company & { 
     password?: string; 
     confirmPassword?: string;
@@ -67,6 +69,8 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [fetchingCompany, setFetchingCompany] = useState(false);
   const [updatingCredentials, setUpdatingCredentials] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   const isEditMode = !!companyId;
   const token = useAppSelector(state => state.auth.token);
@@ -91,6 +95,8 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
       currentPassword: ''
     });
     setLogoPreview('');
+    setLogoUrlWithDomain('');
+    setLogoToDelete('');
     setActiveTab('basicInfo');
     setErrors({});
     setLoading(false);
@@ -142,6 +148,8 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
           currentPassword: ''
         });
         setLogoPreview(companyData.logo || '');
+        setLogoToDelete(companyData.logo || '');
+        setLogoUrlWithDomain('');
       } else {
         showToast({ title: t('companies.failedToFetch'), description: res.error, type: 'error' });
         handleModalClose();
@@ -170,24 +178,94 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
     }
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        setLogoPreview(result);
-        setFormData({
-          ...formData,
-          logoUrl: result
+      // If there is an existing logo, delete it in the background
+      if (logoUrlWithDomain) {
+        apiRequest({
+          method: 'delete',
+          url: '/upload',
+          data: { imageUrl: logoUrlWithDomain },
+          token: token || undefined,
         });
-      };
-      reader.readAsDataURL(file);
+      } else if (logoToDelete) {
+        apiRequest({
+          method: 'delete',
+          url: '/upload',
+          data: { imageUrl: logoToDelete },
+          token: token || undefined,
+        });
+      }
+      setLogoUploading(true);
+      setShowOverlay(true);
+      showToast({
+        title: t('companies.uploadingLogo'),
+        description: t('companies.uploadingLogoDesc')
+      });
+      try {
+        const formDataData = new FormData();
+        formDataData.append('file', file);
+        const res = await apiRequest({
+          method: 'post',
+          url: '/upload',
+          data: formDataData,
+          token: token || undefined,
+          isFormData: true
+        });
+        if (!res.error && res.imageUrl && res.imageUrlWithDomain) {
+          setLogoPreview(res.imageUrlWithDomain);
+          setLogoUrlWithDomain(res.imageUrlWithDomain);
+          setLogoToDelete(res.imageUrlWithDomain);
+          setFormData({
+            ...formData,
+            logoUrl: res.imageUrl,
+          });
+          showToast({
+            title: t('companies.logoUploaded'),
+            description: t('companies.logoUploadedDesc'),
+            type: 'success'
+          });
+        } else {
+          showToast({
+            title: t('companies.failedToUploadLogo'),
+            description: res.error || t('companies.failedToUploadLogoDesc'),
+            type: 'error'
+          });
+        }
+      } catch (error) {
+        showToast({
+          title: t('companies.failedToUploadLogo'),
+          description: t('companies.failedToUploadLogoDesc'),
+          type: 'error'
+        });
+      } finally {
+        setLogoUploading(false);
+        setShowOverlay(false);
+      }
     }
   };
 
-  const handleDeleteLogo = () => {
+  const handleDeleteLogo = async () => {
+    if (logoUrlWithDomain) {
+      // Remove from server in background
+      apiRequest({
+        method: 'delete',
+        url: '/upload',
+        data: { imageUrl: logoUrlWithDomain },
+        token: token || undefined,
+      });
+    } else if (logoToDelete) {
+      apiRequest({
+        method: 'delete',
+        url: '/upload',
+        data: { imageUrl: logoToDelete },
+        token: token || undefined,
+      });
+    }
     setLogoPreview('');
+    setLogoUrlWithDomain('');
+    setLogoToDelete('');
     setFormData({
       ...formData,
       logoUrl: ''
@@ -293,21 +371,12 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
 
   const handleUpdateCredentials = async () => {
     if (!validateTab('loginCredentials')) return;
-    if (!formData.currentPassword || !formData.password || !formData.confirmPassword) {
-      setErrors({ 
-        currentPassword: t('validation.required'),
-        password: t('validation.required'),
-        confirmPassword: t('validation.required')
-      });
-      return;
-    }
 
     setUpdatingCredentials(true);
     try {
       const payload = {
         userId: companyId,
         newEmail: formData.email,
-        currentPassword: formData.currentPassword,
         newPassword: formData.password
       };
 
@@ -414,6 +483,15 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
       title={isEditMode ? t('companies.updateCompany') : t('companies.addCompany')}
       className="max-w-2xl"
     >
+      {/* Overlay for logo uploading */}
+      {showOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-xl shadow-lg">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            <span className="text-lg font-medium text-gray-700">{t('companies.uploadingLogo')}</span>
+          </div>
+        </div>
+      )}
       {fetchingCompany ? (
         <div className="flex items-center justify-center py-12">
           <div className="flex items-center gap-3">
@@ -666,17 +744,6 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
                     error={errors.email}
                   />
 
-                  <Input
-                    name="currentPassword"
-                    type="password"
-                    label={labelWithAsterisk(t('companies.loginCredentials.currentPassword'), 'currentPassword', 'loginCredentials')}
-                    placeholder={t('companies.loginCredentials.currentPassword')}
-                    value={formData.currentPassword || ''}
-                    onChange={handleInputChange}
-                    icon={<KeyRound size={16} className="text-gray-400" />}
-                    error={errors.currentPassword}
-                  />
-                  
                   <div className="grid grid-cols-2 gap-4">
                     <Input
                       name="password"

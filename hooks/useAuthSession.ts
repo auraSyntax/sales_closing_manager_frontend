@@ -35,12 +35,14 @@ export const useAuthSession = () => {
         data: { refreshToken },
       });
       if (response?.jwtToken) {
-        const { userName, email, jwtToken, refreshToken: newRefreshToken, expireTime } = response;
+        const { userName, email, jwtToken, refreshToken: newRefreshToken, expireTime, userType, profile } = response;
         dispatch(
           setLogin({
             user: {
               name: userName,
-              email: email
+              email: email,
+              userType: userType,
+              profile: profile
             },
             token: jwtToken,
             refreshToken: newRefreshToken,

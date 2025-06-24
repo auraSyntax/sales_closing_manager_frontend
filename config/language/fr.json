@@ -137,6 +137,12 @@
     "companyActivated": "Entreprise activée avec succès !",
     "companyDeactivated": "Entreprise désactivée avec succès !",
     "failedToUpdateStatus": "Échec de la mise à jour du statut",
+    "uploadingLogo": "Téléchargement du logo...",
+    "uploadingLogoDesc": "Veuillez patienter pendant le téléchargement de votre logo.",
+    "logoUploaded": "Logo téléchargé !",
+    "logoUploadedDesc": "Le logo de votre entreprise a été téléchargé avec succès.",
+    "failedToUploadLogo": "Échec du téléchargement du logo",
+    "failedToUploadLogoDesc": "Un problème est survenu lors du téléchargement de votre logo. Veuillez réessayer.",
     "basicInfo": {
       "title": "Informations de base",
       "companyName": "Nom de l'entreprise",

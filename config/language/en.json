@@ -137,6 +137,12 @@
     "companyActivated": "Company activated successfully!",
     "companyDeactivated": "Company deactivated successfully!",
     "failedToUpdateStatus": "Failed to update status",
+    "uploadingLogo": "Uploading logo...",
+    "uploadingLogoDesc": "Please wait while your logo is being uploaded.",
+    "logoUploaded": "Logo uploaded!",
+    "logoUploadedDesc": "Your company logo was uploaded successfully.",
+    "failedToUploadLogo": "Failed to upload logo",
+    "failedToUploadLogoDesc": "There was a problem uploading your logo. Please try again.",
     "basicInfo": {
       "title": "Basic Information",
       "companyName": "Company Name",

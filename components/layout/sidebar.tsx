@@ -10,6 +10,7 @@ import { setLogout } from '@/lib/authSlice';
 import { showToast } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Image from 'next/image';
 
 const navigation = [
   { name: 'sidebar.dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -50,9 +51,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   };
 
   const handleLogout = () => {
+    // Clear rememberMe cookie
+    document.cookie = 'rememberMe=false; path=/; max-age=0';
     dispatch(setLogout());
     showToast({ title: t('auth.logout.logoutSuccessful') });
-    router.push('/login');
+    // Force reload and redirect to login to re-initialize Redux Persist with correct storage
+    window.location.href = '/login';
   };
 
   return (
@@ -74,16 +78,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         <div className="flex items-center justify-between px-6 mb-6 lg:hidden">
           <div className="flex items-center space-x-3">
             <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-lg">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-100">
-                  {getLogoFromName(user?.name || '')}
-                </span>
-              </div>
+              {user?.profile ? (
+                <Image
+                  src={user.profile}
+                  alt="Profile"
+                  width={40}
+                  height={40}
+                  className="w-10 h-10 rounded-xl object-cover shadow-lg border-2 border-white"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-lg">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-100">
+                    {getLogoFromName(user?.name || '')}
+                  </span>
+                </div>
+              )}
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-slate-900 animate-pulse"></div>
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-300">
-                {t('sidebar.salesManager')}
+                {user?.userType || ''}
               </span>
             </div>
           </div>
@@ -99,16 +113,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         <div className="hidden lg:flex items-center justify-between px-6 mb-10">
           <div className="flex items-center space-x-3">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-lg">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-100">
-                  {getLogoFromName(user?.name || '')}
-                </span>
-              </div>
+              {user?.profile ? (
+                <Image
+                  src={user.profile}
+                  alt="Profile"
+                  width={48}
+                  height={48}
+                  className="w-12 h-12 rounded-xl object-cover shadow-lg border-2 border-white"
+                />
+              ) : (
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-lg">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-100">
+                    {getLogoFromName(user?.name || '')}
+                  </span>
+                </div>
+              )}
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900 animate-pulse"></div>
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-300">
-                {t('sidebar.salesManager')}
+                {user?.userType || ''}
               </span>
             </div>
           </div>
